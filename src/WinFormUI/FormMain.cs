@@ -48,7 +48,7 @@ namespace SocanCode
             bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bw_RunWorkerCompleted);
             bw.RunWorkerAsync();
 
-            OpenUrl("http://www.Socansoft.com");
+            OpenUrl(HOME_URL);
         }
 
         #region °æ±¾¼ì²â
