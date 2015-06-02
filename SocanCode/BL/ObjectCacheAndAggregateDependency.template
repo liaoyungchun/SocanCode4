@@ -1,0 +1,151 @@
+﻿        $[增加一条数据]$
+        public void Add($ModelNameSpace$.$TableName$ model)
+        {
+            CheckModel(model);
+
+            dal.Add(model);
+            if (EnableCache)
+            {
+                RemoveCountCache();
+                RemoveListCache();
+            }
+        }
+
+        $[更新一条数据]$
+        public void Update($ModelNameSpace$.$TableName$ model)
+        {
+            CheckModel(model);
+
+            int count = dal.Update(model);
+            if (EnableCache && count > 0)
+            {
+                RemoveCountCache();
+                RemoveListCache();
+
+                RemoveModelCache($CacheKeyOfModel$);
+            }
+        }
+
+        $[删除一条数据]$
+        public void Delete($KeyArguments$)
+        {
+            CheckConditionArgument($KeyArgumentValues$);
+
+            int count = dal.Delete($KeyArgumentValues$);
+            if (EnableCache && count > 0)
+            {
+                RemoveCountCache();
+                RemoveListCache();
+
+                RemoveModelCache($CacheKey$);
+                RemoveExistsCache($CacheKey$);
+            }
+        }
+
+        $[是否存在该记录]$
+        public bool Exists($KeyArguments$)
+        {
+            CheckConditionArgument($KeyArgumentValues$);
+
+            if (!EnableCache)
+                return dal.Exists($KeyArgumentValues$);
+
+            string key = basicKey + CACHEHEADER_EXISTS + $CacheKey$;
+            if (HttpRuntime.Cache[key] != null)
+                return (bool)HttpRuntime.Cache[key];
+            else
+            {
+                bool data = dal.Exists($KeyArgumentValues$);
+                AggregateCacheDependency cd = CacheDependencyFactory.DependencyFacade.Get$AfterNamespace$$TableName$CacheDependency();
+                TryAddCache(key, data, cd, Cache.NoAbsoluteExpiration, TimeSpan.FromMinutes(20), CacheItemPriority.Normal, null);
+                return data;
+            }
+        }
+
+        $[得到一个对象实体]$
+        public $ModelNameSpace$.$TableName$ GetModel($KeyArguments$)
+        {
+            CheckConditionArgument($KeyArgumentValues$);
+
+            if (!EnableCache)
+                return dal.GetModel($KeyArgumentValues$);
+
+            string key = basicKey + CACHEHEADER_MODEL + $CacheKey$;
+            if (HttpRuntime.Cache[key] != null)
+                return ($ModelNameSpace$.$TableName$)HttpRuntime.Cache[key];
+            else
+            {
+                $ModelNameSpace$.$TableName$ data = dal.GetModel($KeyArgumentValues$);
+                AggregateCacheDependency cd = CacheDependencyFactory.DependencyFacade.Get$AfterNamespace$$TableName$CacheDependency();
+                TryAddCache(key, data, cd, Cache.NoAbsoluteExpiration, TimeSpan.FromMinutes(20), System.Web.Caching.CacheItemPriority.Normal, null);
+                return data;
+            }
+        }
+
+        $[获得泛型数据列表]$
+        public List<$ModelNameSpace$.$TableName$> GetList()
+        {
+            if (!EnableCache)
+                return dal.GetList();
+
+            string key = basicKey + CACHEHEADER_LIST + "All";
+            if (HttpRuntime.Cache[key] != null)
+                return (List<$ModelNameSpace$.$TableName$>)HttpRuntime.Cache[key];
+            else
+            {
+                List<$ModelNameSpace$.$TableName$> data = dal.GetList();
+                AggregateCacheDependency cd = CacheDependencyFactory.DependencyFacade.Get$AfterNamespace$$TableName$CacheDependency();
+                TryAddCache(key, data, cd, Cache.NoAbsoluteExpiration, Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
+                return data;
+            }
+        }
+
+        $[取得数据行数,不建议直接使用此方法,请根据业务逻辑重写]$
+        public int GetCount(string condition)
+        {
+            if (!EnableCache)
+                return dal.GetCount(condition);
+
+            string key = basicKey + CACHEHEADER_COUNTS + condition;
+            if (HttpRuntime.Cache[key] != null)
+                return (int)HttpRuntime.Cache[key];
+            else
+            {
+                int data = dal.GetCount(condition);
+                AggregateCacheDependency cd = CacheDependencyFactory.DependencyFacade.Get$AfterNamespace$$TableName$CacheDependency();
+                TryAddCache(key, data, null, Cache.NoAbsoluteExpiration, Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
+                return data;
+            }
+        }
+
+        $[分页获取泛型数据列表,不建议直接使用此方法,请根据业务逻辑重写]$
+        public List<$ModelNameSpace$.$TableName$> GetPageList(int pageSize, int pageIndex, string fldSort, bool fldDir, string condition)
+        {
+            if (pageSize <= 0)
+                throw new Exception("每页数据条数必须大于0。");
+
+            if (pageIndex <= 0)
+                throw new Exception("页索引必须大于0。");
+
+            if (string.IsNullOrEmpty(fldSort))
+                throw new Exception("排序字段不能为空。如果是默认排序，可以填写主键字段。");
+
+            if (!EnableCache)
+                return dal.GetPageList(pageSize, pageIndex, fldSort, fldDir, condition);
+
+            string key = basicKey + CACHEHEADER_LIST + fldSort + "_" + fldDir.ToString() + "_" + condition + "_" + pageSize.ToString() + "_" + pageIndex.ToString();
+            if (HttpRuntime.Cache[key] != null)
+            {
+                return (List<$ModelNameSpace$.$TableName$>)HttpRuntime.Cache[key];
+            }
+            else
+            {
+                List<$ModelNameSpace$.$TableName$> data = dal.GetPageList(pageSize, pageIndex, fldSort, fldDir, condition);
+                AggregateCacheDependency cd = CacheDependencyFactory.DependencyFacade.Get$AfterNamespace$$TableName$CacheDependency();
+                if (pageIndex <= 3)
+                    TryAddCache(key, data, cd, Cache.NoAbsoluteExpiration, Cache.NoSlidingExpiration, CacheItemPriority.High, null);
+                else
+                    TryAddCache(key, data, cd, Cache.NoAbsoluteExpiration, Cache.NoSlidingExpiration, CacheItemPriority.Normal, null);
+                return data;
+            }
+        }

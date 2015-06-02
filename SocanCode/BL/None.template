@@ -1,0 +1,61 @@
+﻿        $[增加一条数据]$
+        public void Add($ModelNameSpace$.$TableName$ model)
+        {
+            CheckModel(model);
+            dal.Add(model);
+        }
+
+        $[更新一条数据]$
+        public void Update($ModelNameSpace$.$TableName$ model)
+        {
+            CheckModel(model);
+            dal.Update(model);
+        }
+
+        $[删除一条数据]$
+        public void Delete($KeyArguments$)
+        {
+            CheckConditionArgument($KeyArgumentValues$);
+            dal.Delete($KeyArgumentValues$);
+        }
+
+        $[是否存在该记录]$
+        public bool Exists($KeyArguments$)
+        {
+            CheckConditionArgument($KeyArgumentValues$);
+            return dal.Exists($KeyArgumentValues$);
+        }
+
+        $[得到一个对象实体]$
+        public $ModelNameSpace$.$TableName$ GetModel($KeyArguments$)
+        {
+            CheckConditionArgument($KeyArgumentValues$);
+            return dal.GetModel($KeyArgumentValues$);
+        }
+
+        $[获得泛型数据列表]$
+        public List<$ModelNameSpace$.$TableName$> GetList()
+        {
+            return dal.GetList();
+        }
+
+        $[取得数据行数,不建议直接使用此方法,请根据业务逻辑重写]$
+        public int GetCount(string condition)
+        {
+            return dal.GetCount(condition);
+        }
+
+        $[分页获取泛型数据列表,不建议直接使用此方法,请根据业务逻辑重写]$
+        public List<$ModelNameSpace$.$TableName$> GetPageList(int pageSize, int pageIndex, string fldSort, bool fldDir, string condition)
+        {
+            if (pageSize <= 0)
+                throw new Exception("每页数据条数必须大于0。");
+
+            if (pageIndex <= 0)
+                throw new Exception("页索引必须大于0。");
+
+            if (string.IsNullOrEmpty(fldSort))
+                throw new Exception("排序字段不能为空。如果是默认排序，可以填写主键字段。");
+
+            return dal.GetPageList(pageSize, pageIndex, fldSort, fldDir, condition);
+        }

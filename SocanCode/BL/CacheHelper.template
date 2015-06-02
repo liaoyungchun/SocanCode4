@@ -1,0 +1,132 @@
+﻿//------------------------------------------------------------------------------
+// 创建标识: Copyright (C) $Year$ Socansoft.com 版权所有
+// 创建描述: SocanCode代码生成器 V$Version$ 自动创建于 $CreateTime$
+//
+// 功能描述: 缓存操作辅助类
+//
+// 修改标识: 
+// 修改描述: 
+//------------------------------------------------------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Collections;
+using System.Web;
+using System.Web.Caching;
+using System.Configuration;
+
+namespace $BLNameSpace$
+{
+    /// <summary>
+    /// 缓存操作基类
+    /// </summary>
+    public class CacheHelper
+    {
+        protected readonly string CACHEHEADER_EXISTS = "Exists_";
+        protected readonly string CACHEHEADER_MODEL = "Model_";
+        protected readonly string CACHEHEADER_COUNTS = "Count_";
+        protected readonly string CACHEHEADER_LIST = "List_";
+
+        /// <summary>
+        /// 是否启用缓存
+        /// </summary>
+        protected static readonly bool EnableCache = Convert.ToBoolean(ConfigurationManager.AppSettings["EnableCache"]);
+
+        /// <summary>
+        /// 缓存key的头部
+        /// </summary>
+        protected string basicKey;
+
+        /// <summary>
+        /// 构造函数,请传入basicKey
+        /// </summary>
+        public CacheHelper(string basicKey)
+        {
+            this.basicKey = basicKey;
+        }
+
+        /// <summary>
+        /// 删除key中带"Exists"的缓存
+        /// </summary>
+        protected void RemoveExistsCache(object Id)
+        {
+            TryRemoveCache(basicKey + CACHEHEADER_EXISTS + Id.ToString());
+        }
+
+        /// <summary>
+        /// 删除key中带"Model"的缓存
+        /// </summary>
+        protected void RemoveModelCache(object Id)
+        {
+            TryRemoveCache(basicKey + CACHEHEADER_MODEL + Id.ToString());
+        }
+
+        /// <summary>
+        /// 删除key中带"Counts"的缓存
+        /// </summary>
+        protected void RemoveCountCache()
+        {
+            RemoveMultiCache(basicKey + CACHEHEADER_COUNTS);
+        }
+
+        /// <summary>
+        /// 删除key中带"List"的缓存
+        /// </summary>
+        protected void RemoveListCache()
+        {
+            RemoveMultiCache(basicKey + CACHEHEADER_LIST);
+        }
+
+        #region 缓存基础操作
+
+        /// <summary>
+        /// 建立缓存
+        /// </summary>
+        public static object TryAddCache(string key, object value, CacheDependency dependencies, DateTime absoluteExpiration, TimeSpan slidingExpiration, CacheItemPriority priority, CacheItemRemovedCallback onRemovedCallback)
+        {
+            if (HttpRuntime.Cache[key] == null && value != null)
+                return HttpRuntime.Cache.Add(key, value, dependencies, absoluteExpiration, slidingExpiration, priority, onRemovedCallback);
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// 移除缓存
+        /// </summary>
+        public static object TryRemoveCache(string key)
+        {
+            if (HttpRuntime.Cache[key] != null)
+                return HttpRuntime.Cache.Remove(key);
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// 移除键中带某关键字的缓存
+        /// </summary>
+        public static void RemoveMultiCache(string keyInclude)
+        {
+            IDictionaryEnumerator CacheEnum = HttpRuntime.Cache.GetEnumerator();
+            while (CacheEnum.MoveNext())
+            {
+                if (CacheEnum.Key.ToString().IndexOf(keyInclude.ToString()) >= 0)
+                    HttpRuntime.Cache.Remove(CacheEnum.Key.ToString());
+            }
+        }
+
+        /// <summary>
+        /// 移除所有缓存
+        /// </summary>
+        public static void RemoveAllCache()
+        {
+            IDictionaryEnumerator CacheEnum = HttpRuntime.Cache.GetEnumerator();
+            while (CacheEnum.MoveNext())
+            {
+                HttpRuntime.Cache.Remove(CacheEnum.Key.ToString());
+            }
+        }
+
+        #endregion
+    }
+}
